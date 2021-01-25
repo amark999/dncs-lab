@@ -4,82 +4,48 @@ This repository contains the Vagrant files required to run the virtual lab envir
 ```
 
 
-        +-----------------------------------------------------+
-        |                                                     |
-        |                                                     |eth0
-        +--+--+                +------------+             +------------+
-        |     |                |            |             |            |
-        |     |            eth0|            |eth2     eth2|            |
-        |     +----------------+  router-1  +-------------+  router-2  |
-        |     |                |            |             |            |
-        |     |                |            |             |            |
-        |  M  |                +------------+             +------------+
-        |  A  |                      |eth1                       |eth1
-        |  N  |                      |                           |
-        |  A  |                      |                           |
-        |  G  |                      |                     +-----+----+
-        |  E  |                      |eth1                 |          |
-        |  M  |            +-------------------+           |          |
-        |  E  |        eth0|                   |           |  host-c  |
-        |  N  +------------+      SWITCH       |           |          |
-        |  T  |            |                   |           |          |
-        |     |            +-------------------+           +----------+
-        |  V  |               |eth2         |eth3                |eth0
-        |  A  |               |             |                    |
-        |  G  |               |             |                    |
-        |  R  |               |eth1         |eth1                |
-        |  A  |        +----------+     +----------+             |
-        |  N  |        |          |     |          |             |
-        |  T  |    eth0|          |     |          |             |
-        |     +--------+  host-a  |     |  host-b  |             |
-        |     |        |          |     |          |             |
-        |     |        |          |     |          |             |
-        ++-+--+        +----------+     +----------+             |
-        | |                              |eth0                   |
-        | |                              |                       |
-        | +------------------------------+                       |
-        |                                                        |
-        |                                                        |
-        +--------------------------------------------------------+
-
+        +---------------------------------------------------------------+
+        |                                                               |
+        |                                                               |enp0s3
+        +--+--+                +------------+                       +------------+
+        |     |                |            |                       |            |
+        |     |          enp0s3|            |enp0s9    172.16.0.6/30|            |
+        |     +----------------+  router-1  +-----------------------+  router-2  |
+        |     |                |            |172.16.0.5/30    enp0s9|            |
+        |     |                |            |                       |            |
+        |  M  |                +------------+                       +------------+
+        |  A  |                      |enp0s8                172.16.0.33/27|enp0s8
+        |  N  |             enp0s8.20|enp0s8.10                           |
+        |  A  |         172.16.2.1/23|172.16.1.1/24         172.16.0.34/27|enp0s8
+        |  G  |                      |                              +-----+----+
+        |  E  |                      |enp0s8                        |          |
+        |  M  |           +----------------------+                  |          |
+        |  E  |     enp0s3|                      |                  | Host-2-c |
+        |  N  +-----------+        switch        |                  |          |
+        |  T  |           |                      |                  |          |
+        |     |           +----------------------+                  +----------+
+        |  V  |      VLAN=20|enp0s9     VLAN=10|enp0s10                  |enp0s3
+        |  A  |             |                  |                         |
+        |  G  |             |172.16.2.2/23     |172.16.1.2/24            |
+        |  R  |             |enp0s8            |enp0s8                   |
+        |  A  |       +----------+        +----------+                   |
+        |  N  |       |          |        |          |                   |
+        |  T  | enp0s3|          |        |          |                   |
+        |     +-------+ Host-1-a |        | Host-1-b |                   |
+        |     |       |          |        |          |                   |
+        |     |       |          |        |          |                   |
+        ++-+--+       +----------+        +----------+                   |
+        | |                                   |enp0s3                    |
+        | |                                   |                          |
+        | +-----------------------------------+                          |
+        |                                                                |
+        |                                                                |
+        +----------------------------------------------------------------+
 
 
 ```
 
-# Requirements
- - Python 3
- - 10GB disk storage
- - 2GB free RAM
- - Virtualbox
- - Vagrant (https://www.vagrantup.com)
- - Internet
 
-# How-to
- - Install Virtualbox and Vagrant
- - Clone this repository
-`git clone https://github.com/fabrizio-granelli/dncs-lab`
- - You should be able to launch the lab from within the cloned repo folder.
-```
-cd dncs-lab
-[~/dncs-lab] vagrant up
-```
-Once you launch the vagrant script, it may take a while for the entire topology to become available.
- - Verify the status of the 4 VMs
- ```
- [dncs-lab]$ vagrant status                                                                                                                                                                
-Current machine states:
-
-router                    running (virtualbox)
-switch                    running (virtualbox)
-host-a                    running (virtualbox)
-host-b                    running (virtualbox)
-```
-- Once all the VMs are running verify you can log into all of them:
-`vagrant ssh router`
-`vagrant ssh switch`
-`vagrant ssh host-a`
-`vagrant ssh host-b`
-`vagrant ssh host-c`
 
 # Assignment
 This section describes the assignment, its requirements and the tasks the student has to complete.
@@ -109,12 +75,377 @@ The assignment deliverable consists of a Github repository containing:
 - Commit the changes and push to your own repository
 - Notify the examiner (fabrizio.granelli@unitn.it) that work is complete specifying the Github repository, First Name, Last Name and Matriculation number. This needs to happen at least 7 days prior an exam registration date.
 
-# Notes and References
-- https://rogerdudler.github.io/git-guide/
-- http://therandomsecurityguy.com/openvswitch-cheat-sheet/
-- https://www.cyberciti.biz/faq/howto-linux-configuring-default-route-with-ipcommand/
-- https://www.vagrantup.com/intro/getting-started/
+
+# Design (ENG) - Italian version below
+**General**
+The network design has been made using the private IP block `172.16.0.0/12`, i.e. all the assigned IPs are in the range from `172.16.0.0` to `172.31.255.255`.
+We will soon see the routing tables of all the virtual machines. However, it is important to notice that all the VMs have other network ports and interfaces which will not be shown: those ports and interfaces allow the VMs to communicate with the host machine (the pc where the VM is installed) and also to join to the "real" internet network. So, the routing tables have other entries which will not be written in the following tables. Those entries specify that the default gateway is reachable thorough the enp0s3 interface, and this allows to reach all the machines external to our virtual private network.
+However, the routing tables are set in a way that the traffic destinated to the addresses in the block of private addresses we are using (`172.16.0.0/12`) has to be managed exclusively by our network machines, except when someone tries to reach an address that has not been assigned but the address is in the range of IPs from `172.16.0.0` to `172.31.255.255`: if the packet's origin is a host, this will be sent by default to router connected to the machine (using a specific entry of our routing table), after that, the router will eventually send the packet to the outside of the network, and there, the packet will be discharged soon.
+
+**Host-1-a**
+| Destination | Gateway    | Netmask       | Iface  |
+| ----------- | ---------- | ------------- | ------ |
+| 172.16.0.0  | 172.16.2.1 | 255.240.0.0   | enp0s8 |
+| 172.16.2.0  | 0.0.0.0    | 255.255.254.0 | enp0s8 |
+
+Host-1-a commands are the following (read the comments that start with "#" to understand the commands): 
+    
+    # Activating the network interface
+    ip link set dev enp0s8 up
+    
+    # Adding an IP address to the network interface
+    ip addr add 172.16.2.2/23 dev enp0s8
+    # Using the previous command, it is automatically deduced that the 172.16.2.0/23 network can be rached using enp0s8 interface
+    
+    # # All the traffic destinated to an IP that is in the 172.16.0.0/12 block, is sent to "router-1", which can be reached using the rule that has been automatically deduced in the previous command
+    ip route add 172.16.0.0/12 via 172.16.2.1 dev enp0s8
+
+**Host-1-b**
+| Destination | Gateway    | Netmask       | Iface  |
+| ----------- | ---------- | ------------- | ------ |
+| 172.16.0.0  | 172.16.1.1 | 255.240.0.0   | enp0s8 |
+| 172.16.1.0  | 0.0.0.0    | 255.255.255.0 | enp0s8 |
+
+Host-1-b commands are the same as the Host-1-a commands (only the IPs and the netmasks are changed), for this reason, the commands for this VM are not explained here (Host-1-b.sh file can be used to see the commands that have been used).
+
+**Host-2-c**
+| Destination | Gateway     | Netmask         | Iface   |
+| ----------- | ----------- | --------------- | ------- |
+| 172.16.0.0  | 172.16.0.33 | 255.240.0.0     | enp0s8  |
+| 172.16.0.32 | 0.0.0.0     | 255.255.255.224 | enp0s8  |
+| 192.168.0.0 | 0.0.0.0     | 255.255.240.0   | docker0 |
+Note: Host-2-c has an additional network interface named `docker0`: this has been automatically created when the docker container containing the web server service was activated.
+
+Host-2-c commands are quite similar to the ones used for Host-1-a and Host-1-b (except from the differences in the IPs and netmasks). Host-2-c has some extra commands used for the download of docker from the official repository (these commands can be seen in Host-2-c.sh or in the docker official webpage), and the following two commands are used for the activation of the image that has to be used in the container:
+    
+    # Pulling and running the nginx image
+    docker pull dustnic82/nginx-test
+    docker run -d -p 80:80 dustnic82/nginx-test
+
+**Router-1**
+| Destination | Gateway    | Netmask         | Iface     |
+| ----------- | ---------- | --------------- | --------- |
+| 172.16.0.32 | 172.16.0.6 | 255.255.255.224 | enp0s9    |
+| 172.16.0.4  | 0.0.0.0    | 255.255.255.252 | enp0s9    |
+| 172.16.1.0  | 0.0.0.0    | 255.255.255.0   | enp0s8.10 |
+| 172.16.2.0  | 0.0.0.0    | 255.255.254.0   | enp0s8.20 |
+
+Router-1 commands used for the configuration of the routing table of router-1 are the following:
+    
+    # Two additional links for VLAN management: all the traffic will go thorough the master interface "enp0s8", but with a VLAN tag.
+    ip link add link enp0s8 name enp0s8.10 type vlan id 10
+    ip link add link enp0s8 name enp0s8.20 type vlan id 20
+    
+    # Activating the network interfaces
+    ip link set dev enp0s8 up
+    ip link set dev enp0s8.10 up
+    ip link set dev enp0s8.20 up
+    ip link set dev enp0s9 up
+    
+    # Adding IP addresses to the network interfaces
+    ip addr add 172.16.1.1/24 dev enp0s8.10
+    ip addr add 172.16.2.1/23 dev enp0s8.20
+    ip addr add 172.16.0.5/30 dev enp0s9
+    # enp0s8 hasn't an assigned static IP because the link is now used only for the VALN traffic
+    # The previous commands allow to deduce automatically that 172.16.1.0/24, 172.16.2.0/23 and 172.16.0.4/30 are directly reacheble from the corresponding network interfaces
+    
+    # All the traffic destinated to the Hub subnetwork, is sent to "router-2"
+    ip route add 172.16.0.32/27 via 172.16.0.6 dev enp0s9
+    
+    # Allowing the forwarding of the packets
+    sysctl -w net.ipv4.ip_forward=1
+    
+
+**Router-2**
+| Destination | Gateway    | Netmask         | Iface  |
+| ----------- | ---------- | --------------- | ------ |
+| 172.16.1.0  | 172.16.0.5 | 255.255.255.0   | enp0s9 |
+| 172.16.2.0  | 172.16.0.5 | 255.255.254.0   | enp0s9 |
+| 172.16.0.4  | 0.0.0.0    | 255.255.255.252 | enp0s9 |
+| 172.16.0.32 | 0.0.0.0    | 255.255.255.224 | enp0s8 |
+
+Router-2 commands are quite similar to the ones used for router-1, and will not be explained here, since the final configuration can be sintetized in this table (the full list of commands is in router-2.sh)
+    
+Looking at the routers configuration, we can notice that when it is required to route the traffic destinated to an address in the `172.16.0.0/12` block but that address doesn't belong to any network interface of our network, routers route the traffic on enp0s3 (i.e. the default gateway that links the VMs to the external network). Routers do that because there isn't a specific entry in our routing table for managing the traffic directed to those addresses.
+
+The alternative choice (which has not been implemented) could have been the following: having routers that delegate the forwording decision to the other router when they are not able to reach a particular address that a packet wants to reach. However, using this phylosophy, the other router, when it does not know where to route the packet too, would delegate the routing decision to the first router again. This design choice could look as a totally non-sense choice, since, when it is generated a packet with a destination as `172.16.4.0` (which belongs to our network but isn't assigned to any network interface), it could be thaught that the packets would jump forward and back from one router to the other one until the TTL goes down to 0, although, it has been observed that this doesn't happen. This has been obesrved using wireshark, which has been installed on router-1 (this can be done uncommenting some lines of code in "router-1.sh"). Using wireshark it was observed what happens when the mentioned packet was created: the packet goes forward and back only once, and when it reaches router-1 for the second time, it is rejected.
+Anyway, this design choice hasn't been used since, the workload of the routers is greater compared to the workload they have when they are specialized for routing the packets only for the existing subnetworks. For example: if a packet with destination `172.16.0.0/12` was created, this destination would not belong to any of our subnetworks, but it would still have to pass through both routers. With the "specialized" routers case (the design choice), the packet would have been routed to the external network immediately, without even involving the other router.
+Note: for a better explanation of wireshark usage, go to the specific section of this guide.
+
+**OpenVSwitch**
+As we can see in `switch.sh` the switch is really simple thanks to OpenVSwitch. The executed commands are:
+    
+    apt-get update
+    apt-get install -y tcpdump
+    apt-get install -y openvswitch-common openvswitch-switch apt-transport-https ca-certificates curl software-properties-common
+    
+    # Startup commands for switch go here
+    # OpenVSwitch initiation command
+    ovs-vsctl init
+    
+    # Adding a bridge called "switch"
+    ovs-vsctl add-br switch
+    
+    # Adding the ports to "switch". The tags are used for VLAN setting
+    ovs-vsctl add-port switch enp0s8
+    ovs-vsctl add-port switch enp0s9 tag=20
+    ovs-vsctl add-port switch enp0s10 tag=10
+    
+    # Activating the network interfaces
+    ip link set dev enp0s8 up
+    ip link set dev enp0s9 up
+    ip link set dev enp0s10 up
 
 
-# Design
-[ Your work goes here ]
+This file simply installs openvswitch, creates a bridge and links to it the interfaces of the machine. It is important to notice that Hosts-A and Hosts-B networks are separated using VLAN tags. The link between switch and router-1 is made using one single port (a trunk-port) and the separation of the traffic of the two subnetworks is done using two network interfaces which have different VLAN ID tags.
+
+**Addresses**
+The addresses used in the subnetworks are written in the following table.
+| Subnetwork | Network     | Netmask         | Broadcast    | HostMin     | HostMax      | #Hosts |
+| ---------- | ----------- | --------------- | ------------ | ----------- | ------------ | ------ |
+| Hosts-A    | 172.16.2.0  | 255.255.254.0   | 172.16.3.255 | 172.16.2.1  | 172.16.3.254 | 510    |
+| Hosts-B    | 172.16.1.0  | 255.255.255.0   | 172.16.1.255 | 172.16.1.1  | 172.16.1.255 | 254    |
+| Hub        | 172.16.0.32 | 255.255.255.224 | 172.16.0.63  | 172.16.0.33 | 172.16.0.62  | 30     |
+| Routers    | 172.16.0.4  | 255.255.255.252 | 172.16.0.7   | 172.16.0.5  | 172.16.0.6   | 2      |
+
+**Notes:**
+The file named `Vagrantfile` has been changed in a very little way: it was only added a small amount of memory to Host-2-c in order to allow the installation of docker (it was set to 256MB and now it is 512MB), and the command files (xxxx.sh) were changed.
+The files named `xxxxx.sh` which contain the commands needed for the machines set-up are widely commented: the complete list of commands used for the network set-up can be consulted in those files.
+
+## Test
+The correct network configuration was checked using the following commands after connecting to the machines using the `vagrant ssh xxxxxx` command:
+
+**Host-1-a**:
+    
+    ping -c3 172.16.2.1       # Host-1-a can reach router-1
+    ping -c3 172.16.1.2       # Host-1-a can reach Host-1-b
+    ping -c3 172.16.0.6       # Host-1-a can reach router-2
+    ping -c3 172.16.0.34      # Host-1-a can reach Host-2-c
+    curl http://172.16.0.34   # Host-1-a has access to the web-server in Host-2-c
+ 
+**Host-1-b**:
+    
+    ping -c3 172.16.1.1       # Host-1-b can reach router-1
+    ping -c3 172.16.2.2       # Host-1-b can reach Host-1-a
+    ping -c3 172.16.0.6       # Host-1-b can reach router-2
+    ping -c3 172.16.0.34      # Host-1-b can reach Host-2-c
+    curl http://172.16.0.34   # Host-1-b has access to the web-server in Host-2-c
+ 
+**Host-2-c**:
+    
+    ping -c3 172.16.0.33      # Host-2-c can reach router-2
+    ping -c3 172.16.0.5       # Host-2-c can reach router-1
+    ping -c3 172.16.2.2       # Host-2-c can reach Host-1-a
+    ping -c3 172.16.1.2       # Host-2-c can reach Host-1-b
+  
+**router-1**:
+    
+    ping -c3 172.16.0.6       # router-1 can reach router-2
+    ping -c3 172.16.2.2       # router-1 can reach Host-1-a
+    ping -c3 172.16.1.2       # router-1 can reach Host-1-b
+    ping -c3 172.16.0.34      # router-1 can reach Host-2-c
+ 
+**router-2**:
+    
+    ping -c3 172.16.0.5       # router-2 can reach router-1
+    ping -c3 172.16.2.2       # router-2 can reach Host-1-a
+    ping -c3 172.16.1.2       # router-2 can reach Host-1-b
+    ping -c3 172.16.0.34      # router-2 can reach Host-2-c
+    
+    
+**Notes about wireshark**
+There is the possibility of installing Wireshark on router-1 in order to monitor the traffic that transits through a specific interface.
+In order to install wireshark it is necessary to edit the file named `Vagrantfile` before executing `vagrant up`: you must set the memory of router-1 up to 512MB and you must also de-comment the lines which allow the installation of wireshark in the file `router-1.sh`.
+After the installation process, Wireshark can be used thorough the CLI using the following command:
+
+    sudo tshark -i enp0sX
+(you must change X with the number of the interface you want to monitor. Remember that router-1 has the following interfaces: `enp0s3`, `enp0s8`, `enp0s8.10`, `enp0s8.20`, `enp0s9`).
+Wireshark can intercept the traffic on our network. For example, wireshark was used for checking the previous made explanations about the "alternative design" which was decided not to use in this solution (we can check that the routers do not produce redundant traffic with decreasing TTL when the routing tables of the routers are "generic" and a packet with an unknown destination is generated).
+
+
+# Design (IT)
+**Generale**
+Il design della rete è stato effettuato usando il blocco di indirizzi IP privati `172.16.0.0/12`, ne consegue che tutti gli IP assegnati sono compresi tra `172.16.0.0` e `172.31.255.255`.
+In seguito saranno mostrate le tabelle di routing dei vari dispositivi. In ogni modo, è bene prima osservare che tutti i dispositivi contengono altre interfacce che non verranno segnalate: esse permettono alle macchine virtuali di collegarsi all'host (il pc su cui verranno installate le VM) e anche alla "vera" rete internet. Le tabelle di routing contengono quindi ulteriori righe, che non saranno presenti nelle seguenti tabelle, in cui è specificato che il default gateway è raggiungibile tramite l'iterfaccia enp0s3, ed esso permette di raggiungere le macchine all'esterno della nostra rete virtuale. 
+Tuttavia, le tabelle di routing sono impostate in modo tale che il traffico destinato agli indirizzi del blocco di indirizzi privati che stiamo utilizzando, sia gestito esclusivamente dalle macchine nella nostra rete, eccetto al più quando si tenterà di raggiungere un indirizzo che non è stato assegnato ma che si trova nell'intervallo tra `172.16.0.0` e `172.31.255.255` e non appartiene a nessuna sottorete: in tal caso, se il pacchetto parte da uno degli host, esso sarà indirizzato di default verso il router a cui è connesso (grazie ad una specifica regola), e poi il router si occuperà di mandarlo all'esterno dove esso sarà probabilmente presto scartato.
+
+**Host-1-a**
+| Destination | Gateway    | Netmask       | Iface  |
+| ----------- | ---------- | ------------- | ------ |
+| 172.16.0.0  | 172.16.2.1 | 255.240.0.0   | enp0s8 |
+| 172.16.2.0  | 0.0.0.0    | 255.255.254.0 | enp0s8 |
+
+I comandi eseguiti su Host-1-a sono i seguenti (leggere i commenti per comprendere il loro significato): 
+    
+    # Attivazione dell'interfaccia di rete
+    ip link set dev enp0s8 up
+    
+    # Aggiungo l'indirizzo IP statico all'interfaccia di rete
+    ip addr add 172.16.2.2/23 dev enp0s8
+    # Tramite il precedente comando, viene compreso in modo automatico che la sottorete 172.16.2.0/23 è raggiungibile tramite l'interfaccia enp0s8
+    
+    # Tutto il traffico destinato ad uno degli indirizzi del blocco 172.16.0.0/12, è mandato verso "router-1", il quale si può raggiungere tramite enp0s8 come è stato precedentemente appreso
+    ip route add 172.16.0.0/12 via 172.16.2.1 dev enp0s8
+
+**Host-1-b**
+| Destination | Gateway    | Netmask       | Iface  |
+| ----------- | ---------- | ------------- | ------ |
+| 172.16.0.0  | 172.16.1.1 | 255.240.0.0   | enp0s8 |
+| 172.16.1.0  | 0.0.0.0    | 255.255.255.0 | enp0s8 |
+
+I comandi eseguiti su Host-1-b sono analoghi a quelli specificati per Host-1-a (cambiano semplicemente gli indirizzi IP e le netmask utilizzate), e non saranno quindi specificati (possono essere consultati nel file Host-1-b.sh).
+
+**Host-2-c**
+| Destination | Gateway     | Netmask         | Iface   |
+| ----------- | ----------- | --------------- | ------- |
+| 172.16.0.0  | 172.16.0.33 | 255.240.0.0     | enp0s8  |
+| 172.16.0.32 | 0.0.0.0     | 255.255.255.224 | enp0s8  |
+| 192.168.0.0 | 0.0.0.0     | 255.255.240.0   | docker0 |
+Nota: nell'Host-2-c è presente una ulteriore interfaccia di rete nominata `docker0`, che è stata creata in automatico all'installazione e attivazione del web server all'interno del contenitore docker.
+
+I comandi eseguiti su Host-2-c sono in parte analoghi a quelli specificati per Host-1-a e Host-1-b (con le dovute differenze negli indirizzi IP e nelle natmask utilizzate). Host-2-c in particolare esegue il download di docker (i comandi possono essere consultati nel file Host-2-c.sh), e l'attivazione dell'immagine da utilizzare nel container che viene effettuata tramite i seguenti comandi:
+    
+    # Pull ed esecuzione dell'immagine nginx
+    docker pull dustnic82/nginx-test
+    docker run -d -p 80:80 dustnic82/nginx-test
+
+**Router-1**
+| Destination | Gateway    | Netmask         | Iface     |
+| ----------- | ---------- | --------------- | --------- |
+| 172.16.0.32 | 172.16.0.6 | 255.255.255.224 | enp0s9    |
+| 172.16.0.4  | 0.0.0.0    | 255.255.255.252 | enp0s9    |
+| 172.16.1.0  | 0.0.0.0    | 255.255.255.0   | enp0s8.10 |
+| 172.16.2.0  | 0.0.0.0    | 255.255.254.0   | enp0s8.20 |
+
+I comandi eseguiti per ottenere la precedente configurazione della tabella di routing del router-1 sono:
+    
+    # Sono aggiunti due link "figli" di enp0s8 per la gestione delle VLAN: il traffico percorrerà enp0s8, ma avrà un VLAN tag specifico
+    ip link add link enp0s8 name enp0s8.10 type vlan id 10
+    ip link add link enp0s8 name enp0s8.20 type vlan id 20
+    
+    # Attivazione delle interfacce di rete
+    ip link set dev enp0s8 up
+    ip link set dev enp0s8.10 up
+    ip link set dev enp0s8.20 up
+    ip link set dev enp0s9 up
+    
+    # Aggiungo l'indirizzo IP statico alle interfacce di rete
+    ip addr add 172.16.1.1/24 dev enp0s8.10
+    ip addr add 172.16.2.1/23 dev enp0s8.20
+    ip addr add 172.16.0.5/30 dev enp0s9
+    # Osserviamo che non è stato aggiunto un indirizzo IP a enp0s8 poichè nella configurazione attuale tale link è utilizzato solo per il traffico delle VLAN
+    # Osserviamo anche che tramite i precedenti comandi si apprende, che le sottoreti 172.16.1.0/24, 172.16.2.0/23 e 172.16.0.4/30, sono raggiungibili direttamente tramite le corrispondenti interfacce di rete
+    
+    # Il traffico destinato alla sottorete Hub, verrà mandato a "router-2"
+    ip route add 172.16.0.32/27 via 172.16.0.6 dev enp0s9
+    
+    # Abilitazione dell'IP forwarding
+    sysctl -w net.ipv4.ip_forward=1
+    
+
+**Router-2**
+| Destination | Gateway    | Netmask         | Iface  |
+| ----------- | ---------- | --------------- | ------ |
+| 172.16.1.0  | 172.16.0.5 | 255.255.255.0   | enp0s9 |
+| 172.16.2.0  | 172.16.0.5 | 255.255.254.0   | enp0s9 |
+| 172.16.0.4  | 0.0.0.0    | 255.255.255.252 | enp0s9 |
+| 172.16.0.32 | 0.0.0.0    | 255.255.255.224 | enp0s8 |
+
+I comandi di router-2 utilizzati per ottenere la configurazione di rete qui specificata, sono molto simili a quelli utilizzati da router-1, e non saranno qui descritti (è possibile consultarli nel file router-2.sh). 
+    
+Osserviamo che i router, quando viene loro richiesto di instradare il traffico verso un indirizzo appartenente al blocco `172.16.0.0/12` che non appartiene a nessuna delle sottoreti di questa topologia, instradano il traffico verso l'interfaccia enp0s3, ossia verso il default gateway di tutte le macchine virtuali che abbiamo, e fanno questo poiché non è presente una specifica regola per il traffico verso tali destinazioni. Si è optato di adottare tale scelta di design per motivi specifici che saranno adesso spiegati. Il pensiero adottato è stato: "se un host vuole raggiungere un qualsiasi indirizzo nella rete `172.16.0.0/12`, esso contatterà il suo router. I router saranno però specifici per questa rete, e sapranno inoltrare il traffico "interno" solo verso le sottoreti esistenti. Se si dovesse aggiungere una eventuale sottorete alla nostra rete virtuale, bisognerebbe aggiungere delle nuove entry alla tabella di routing affinché esse siano raggiungibili". 
+
+La scelta alternativa (che non è stata adottata) sarebbe potuta essere di avere dei router che, non sapendo raggiungere un particolare indirizzo appartenente alla nostra rete, delegassero il compito dell'instradamento del pacchetto destinato a tale indirizzo all'altro router. Tuttavia, l'altro router in questo caso, se non conoscesse dove trovare la destinazione a sua volta, avrebbe delegato l'instradamento del pacchetto di nuovo al primo router. Questa scelta di design, nonostante possa sembrare del tutto sconveniente, perché nel momento in cui è generato un pacchetto indirizzato ad un indirizzo come `172.16.4.0` (che appartiene alla nostra rete ma non è assegnato a nessuna interfaccia di rete), i pacchetti dovrebbero "rimbalzare" da un router all'altro fino allo scedere del loro TTL, si è osservato che ciò non accade. Si è osservato ciò tramite wireshark che è stato installato nel router-1, al fine di osservare cosa succedesse quando un pacchetto indirizzato verso l'indirizzo suddetto veniva creato: si è visto che quello che accade in questo caso è che il pacchetto rimbalza solo una volta, e quando raggiunge nuovamente il router-1, dopo che vi ha già transitato una volta, esso viene scartato.
+Tale scelta non è stata comunque adottata per il semplice motivo che, in questo caso, il carico di lavoro dei router sarebbe maggiore rispetto a quando le loro rotte sono impostate in modo specifico per le sottoreti esistenti, in quanto se un pacchetto è destinato ad un indirizzo del blocco `172.16.0.0/12` che non appartiene a nessuna delle nostre sottoreti o interfacce di rete esistenti, esso dovrebbe per forza transitare per entrambi i router prima di essere scartato. Mentre, nella nostra scelta di design, tali pacchetti vengono subito indirizzati verso l'esterno al primo router che incontreranno, senza coinvolgere l'altro router.
+Nota: per un eventuale utilizzo di wireshark, vedere la apposita sezione presente in coda al testo.
+
+**OpenVSwitch**
+Lo switch è molto semplice grazie all'utilizzao di OpenVSwitch: come si può osservare nel file `switch.sh`, in cui sono eseguiti i seguenti comandi:
+    
+    apt-get update
+    apt-get install -y tcpdump
+    apt-get install -y openvswitch-common openvswitch-switch apt-transport-https ca-certificates curl software-properties-common
+    
+    # Startup commands for switch go here
+    # Comando di inizializzazione di OpenVSwitch
+    ovs-vsctl init
+    
+    # Aggiungo un bridge nominato "switch"
+    ovs-vsctl add-br switch
+    
+    # Aggiungo le porte collegate alla VM a "switch". I tag sono utilizzati per l'impostazione delle VLAN
+    ovs-vsctl add-port switch enp0s8
+    ovs-vsctl add-port switch enp0s9 tag=20
+    ovs-vsctl add-port switch enp0s10 tag=10
+    
+    # Attivazione delle interfacce di rete
+    ip link set dev enp0s8 up
+    ip link set dev enp0s9 up
+    ip link set dev enp0s10 up
+
+
+esso, dopo aver installato openvswitch, collega semplicemente le porte di rete ad esso connesse tramite un bridge. E' interessante osservare come le reti Hosts-A e Hosts-B siano state separate grazie all'utilizzo dei tag VLAN. Il collegamento da router-1 a switch è effettuato tramite un'unica porta (trunk-port) e la differenziazione del traffico delle due sottoreti durante l'instradamento avviene grazie all'utilizzo di due interfacce di rete che fanno utilizzo di diversi ID tag delle VLAN.
+
+**Indirizzamento**
+Nella seguente tabella sono riportati alcuni dati sugli indirizzi utilizzati nelle sottoreti.
+| Subnetwork | Network     | Netmask         | Broadcast    | HostMin     | HostMax      | #Hosts |
+| ---------- | ----------- | --------------- | ------------ | ----------- | ------------ | ------ |
+| Hosts-A    | 172.16.2.0  | 255.255.254.0   | 172.16.3.255 | 172.16.2.1  | 172.16.3.254 | 510    |
+| Hosts-B    | 172.16.1.0  | 255.255.255.0   | 172.16.1.255 | 172.16.1.1  | 172.16.1.255 | 254    |
+| Hub        | 172.16.0.32 | 255.255.255.224 | 172.16.0.63  | 172.16.0.33 | 172.16.0.62  | 30     |
+| Routers    | 172.16.0.4  | 255.255.255.252 | 172.16.0.7   | 172.16.0.5  | 172.16.0.6   | 2      |
+
+**Note:**
+Il file `Vagrantfile` è stato modificato in modo molto ridotto: è stata solamente aggiunta memoria a Host-2-c in modo tale che potesse installare docker e sono stati cambiati i nomi dei file contenenti i comandi per la shell (files xxxxx.sh).
+I file `xxxxx.sh` contenenti i comandi per l'inizializzazione delle macchine virtuali sono ampiamente commentati: è possibile osservare all'interno di tali file la lista completa dei comandi utilizzati per impostare correttamente la nostra rete.
+
+## Test
+La corretta configurazione della rete è stata verificata tramite i seguenti comandi:
+
+**Host-1-a**:
+    
+    ping -c3 172.16.2.1       # Host-1-a puo' raggiungere router-1
+    ping -c3 172.16.1.2       # Host-1-a puo' raggiungere Host-1-b
+    ping -c3 172.16.0.6       # Host-1-a puo' raggiungere router-2
+    ping -c3 172.16.0.34      # Host-1-a puo' raggiungere Host-2-c
+    curl http://172.16.0.34   # Host-1-a può accedere al web-server in Host-2-c
+ 
+**Host-1-b**:
+    
+    ping -c3 172.16.1.1       # Host-1-b puo' raggiungere router-1
+    ping -c3 172.16.2.2       # Host-1-b puo' raggiungere Host-1-a
+    ping -c3 172.16.0.6       # Host-1-b puo' raggiungere router-2
+    ping -c3 172.16.0.34      # Host-1-b puo' raggiungere Host-2-c
+    curl http://172.16.0.34   # Host-1-b può accedere al web-server in Host-2-c
+ 
+**Host-2-c**:
+    
+    ping -c3 172.16.0.33      # Host-2-c puo' raggiungere router-2
+    ping -c3 172.16.0.5       # Host-2-c puo' raggiungere router-1
+    ping -c3 172.16.2.2       # Host-2-c puo' raggiungere Host-1-a
+    ping -c3 172.16.1.2       # Host-2-c puo' raggiungere Host-1-b
+  
+**router-1**:
+    
+    ping -c3 172.16.0.6       # router-1 puo' raggiungere router-2
+    ping -c3 172.16.2.2       # router-1 puo' raggiungere Host-1-a
+    ping -c3 172.16.1.2       # router-1 puo' raggiungere Host-1-b
+    ping -c3 172.16.0.34      # router-1 puo' raggiungere Host-2-c
+ 
+**router-2**:
+    
+    ping -c3 172.16.0.5       # router-2 puo' raggiungere router-1
+    ping -c3 172.16.2.2       # router-2 puo' raggiungere Host-1-a
+    ping -c3 172.16.1.2       # router-2 puo' raggiungere Host-1-b
+    ping -c3 172.16.0.34      # router-2 puo' raggiungere Host-2-c
+    
+    
+**Note su wireshark**
+In router-1, è possibile installare Wireshark per osservare il traffico che transita attraverso una specifica interfaccia.
+Per installarlo, è necessario, prima di fare `vagrant up`, modificare il `Vagrantfile`, andando ad inserire 512MB di memoria per router-1, e modificare il file `router-1.sh`, andando a scommentare le righe che consentono l'installazione di wireshark.
+In seguito ai precedenti passaggi, wireshark può essere utilizzato, nella sua versione tramite la CLI, lanciando il seguente comando:
+
+    sudo tshark -i enp0sX
+dove al posto di X deve essere inserito il numero dell'interfaccia di rete di cui si vuole intercettare il traffico (ricordiamo che le interfacce presenti in router-1 sono: `enp0s3`, `enp0s8`, `enp0s8.10`, `enp0s8.20`, `enp0s9`).
+Si può utilizzare wireshark per intercettare il regolare traffico presente nella nostra rete, oppure, si può tentare di modificare le tabelle di routing dei router, impostandole nella configurazione che è stata precedentemente spiegata ma che non è stata utilizzata nel nostro design, per verificare le affermazioni che sono state fatte (ossia, si può verificare che quando i router sono impostati in modo tale da inoltrare il traffico degli indirizzi che non sanno come raggiungere verso l'altro router, i pacchetti che si generano non "rimbalzano" fino allo scadere del TTL tra i due router come è già stato spiegato).
+

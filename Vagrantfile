@@ -47,31 +47,31 @@ Vagrant.configure("2") do |config|
       vb.memory = 256
     end
   end
-  config.vm.define "host-a" do |hosta|
+  config.vm.define "Host-1-a" do |hosta|
     hosta.vm.box = "ubuntu/bionic64"
-    hosta.vm.hostname = "host-a"
+    hosta.vm.hostname = "Host-1-a"
     hosta.vm.network "private_network", virtualbox__intnet: "broadcast_host_a", auto_config: false
-    hosta.vm.provision "shell", path: "host-a.sh"
+    hosta.vm.provision "shell", path: "Host-1-a.sh"
     hosta.vm.provider "virtualbox" do |vb|
       vb.memory = 256
     end
   end
-  config.vm.define "host-b" do |hostb|
+  config.vm.define "Host-1-b" do |hostb|
     hostb.vm.box = "ubuntu/bionic64"
-    hostb.vm.hostname = "host-b"
+    hostb.vm.hostname = "Host-1-b"
     hostb.vm.network "private_network", virtualbox__intnet: "broadcast_host_b", auto_config: false
-    hostb.vm.provision "shell", path: "host-b.sh"
+    hostb.vm.provision "shell", path: "Host-1-b.sh"
     hostb.vm.provider "virtualbox" do |vb|
       vb.memory = 256
     end
   end
-  config.vm.define "host-c" do |hostc|
+  config.vm.define "Host-2-c" do |hostc|
     hostc.vm.box = "ubuntu/bionic64"
-    hostc.vm.hostname = "host-c"
+    hostc.vm.hostname = "Host-2-c"
     hostc.vm.network "private_network", virtualbox__intnet: "broadcast_router-south-2", auto_config: false
-    hostc.vm.provision "shell", path: "host-c.sh"
+    hostc.vm.provision "shell", path: "Host-2-c.sh"
     hostc.vm.provider "virtualbox" do |vb|
-      vb.memory = 256
+      vb.memory = 512 #old 256 -> edited because docker cannot be installed otherwise
     end
   end
 end
