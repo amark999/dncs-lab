@@ -1,0 +1,18 @@
+FirstName: Amar
+LastName: Kasibovic
+MatriculationNumber: 202698
+AcademicYear: 2020-2021
+GitHubUrl: https://github.com/amark999/dncs-lab
+Subnets:
+  HostsA:
+    RequiredAddresses: 407
+    SubnetAddress: 172.16.2.0
+    SubnetPrefixLength: 23
+  HostsB:
+    RequiredAddresses: 146
+    SubnetAddress: 172.16.1.0
+    SubnetPrefixLength: 24
+  Hub:
+    RequiredAddresses: 24
+    SubnetAddress: 172.16.32.0
+    SubnetPrefixLength: 27
