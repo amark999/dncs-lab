@@ -78,6 +78,7 @@ The assignment deliverable consists of a Github repository containing:
 
 # Design (ENG) - Italian version below
 **General**
+
 The network design has been made using the private IP block `172.16.0.0/12`, i.e. all the assigned IPs are in the range from `172.16.0.0` to `172.31.255.255`.
 We will soon see the routing tables of all the virtual machines. However, it is important to notice that all the VMs have other network ports and interfaces which will not be shown: those ports and interfaces allow the VMs to communicate with the host machine (the pc where the VM is installed) and also to join to the "real" internet network. So, the routing tables have other entries which will not be written in the following tables. Those entries specify that the default gateway is reachable thorough the enp0s3 interface, and this allows to reach all the machines external to our virtual private network.
 However, the routing tables are set in a way that the traffic destinated to the addresses in the block of private addresses we are using (`172.16.0.0/12`) has to be managed exclusively by our network machines, except when someone tries to reach an address that has not been assigned but the address is in the range of IPs from `172.16.0.0` to `172.31.255.255`: if the packet's origin is a host, this will be sent by default to router connected to the machine (using a specific entry of our routing table), after that, the router will eventually send the packet to the outside of the network, and there, the packet will be discharged soon.
@@ -114,6 +115,7 @@ Host-1-b commands are the same as the Host-1-a commands (only the IPs and the ne
 | 172.16.0.0  | 172.16.0.33 | 255.240.0.0     | enp0s8  |
 | 172.16.0.32 | 0.0.0.0     | 255.255.255.224 | enp0s8  |
 | 192.168.0.0 | 0.0.0.0     | 255.255.240.0   | docker0 |
+
 Note: Host-2-c has an additional network interface named `docker0`: this has been automatically created when the docker container containing the web server service was activated.
 
 Host-2-c commands are quite similar to the ones used for Host-1-a and Host-1-b (except from the differences in the IPs and netmasks). Host-2-c has some extra commands used for the download of docker from the official repository (these commands can be seen in Host-2-c.sh or in the docker official webpage), and the following two commands are used for the activation of the image that has to be used in the container:
@@ -173,6 +175,7 @@ Anyway, this design choice hasn't been used since, the workload of the routers i
 Note: for a better explanation of wireshark usage, go to the specific section of this guide.
 
 **OpenVSwitch**
+
 As we can see in `switch.sh` the switch is really simple thanks to OpenVSwitch. The executed commands are:
     
     apt-get update
@@ -200,6 +203,7 @@ As we can see in `switch.sh` the switch is really simple thanks to OpenVSwitch. 
 This file simply installs openvswitch, creates a bridge and links to it the interfaces of the machine. It is important to notice that Hosts-A and Hosts-B networks are separated using VLAN tags. The link between switch and router-1 is made using one single port (a trunk-port) and the separation of the traffic of the two subnetworks is done using two network interfaces which have different VLAN ID tags.
 
 **Addresses**
+
 The addresses used in the subnetworks are written in the following table.
 | Subnetwork | Network     | Netmask         | Broadcast    | HostMin     | HostMax      | #Hosts |
 | ---------- | ----------- | --------------- | ------------ | ----------- | ------------ | ------ |
@@ -209,6 +213,7 @@ The addresses used in the subnetworks are written in the following table.
 | Routers    | 172.16.0.4  | 255.255.255.252 | 172.16.0.7   | 172.16.0.5  | 172.16.0.6   | 2      |
 
 **Notes:**
+
 The file named `Vagrantfile` has been changed in a very little way: it was only added a small amount of memory to Host-2-c in order to allow the installation of docker (it was set to 256MB and now it is 512MB), and the command files (xxxx.sh) were changed.
 The files named `xxxxx.sh` which contain the commands needed for the machines set-up are widely commented: the complete list of commands used for the network set-up can be consulted in those files.
 
@@ -254,6 +259,7 @@ The correct network configuration was checked using the following commands after
     
     
 **Notes about wireshark**
+
 There is the possibility of installing Wireshark on router-1 in order to monitor the traffic that transits through a specific interface.
 In order to install wireshark it is necessary to edit the file named `Vagrantfile` before executing `vagrant up`: you must set the memory of router-1 up to 512MB and you must also de-comment the lines which allow the installation of wireshark in the file `router-1.sh`.
 After the installation process, Wireshark can be used thorough the CLI using the following command:
@@ -265,6 +271,7 @@ Wireshark can intercept the traffic on our network. For example, wireshark was u
 
 # Design (IT)
 **Generale**
+
 Il design della rete è stato effettuato usando il blocco di indirizzi IP privati `172.16.0.0/12`, ne consegue che tutti gli IP assegnati sono compresi tra `172.16.0.0` e `172.31.255.255`.
 In seguito saranno mostrate le tabelle di routing dei vari dispositivi. In ogni modo, è bene prima osservare che tutti i dispositivi contengono altre interfacce che non verranno segnalate: esse permettono alle macchine virtuali di collegarsi all'host (il pc su cui verranno installate le VM) e anche alla "vera" rete internet. Le tabelle di routing contengono quindi ulteriori righe, che non saranno presenti nelle seguenti tabelle, in cui è specificato che il default gateway è raggiungibile tramite l'iterfaccia enp0s3, ed esso permette di raggiungere le macchine all'esterno della nostra rete virtuale. 
 Tuttavia, le tabelle di routing sono impostate in modo tale che il traffico destinato agli indirizzi del blocco di indirizzi privati che stiamo utilizzando, sia gestito esclusivamente dalle macchine nella nostra rete, eccetto al più quando si tenterà di raggiungere un indirizzo che non è stato assegnato ma che si trova nell'intervallo tra `172.16.0.0` e `172.31.255.255` e non appartiene a nessuna sottorete: in tal caso, se il pacchetto parte da uno degli host, esso sarà indirizzato di default verso il router a cui è connesso (grazie ad una specifica regola), e poi il router si occuperà di mandarlo all'esterno dove esso sarà probabilmente presto scartato.
@@ -301,6 +308,7 @@ I comandi eseguiti su Host-1-b sono analoghi a quelli specificati per Host-1-a (
 | 172.16.0.0  | 172.16.0.33 | 255.240.0.0     | enp0s8  |
 | 172.16.0.32 | 0.0.0.0     | 255.255.255.224 | enp0s8  |
 | 192.168.0.0 | 0.0.0.0     | 255.255.240.0   | docker0 |
+
 Nota: nell'Host-2-c è presente una ulteriore interfaccia di rete nominata `docker0`, che è stata creata in automatico all'installazione e attivazione del web server all'interno del contenitore docker.
 
 I comandi eseguiti su Host-2-c sono in parte analoghi a quelli specificati per Host-1-a e Host-1-b (con le dovute differenze negli indirizzi IP e nelle natmask utilizzate). Host-2-c in particolare esegue il download di docker (i comandi possono essere consultati nel file Host-2-c.sh), e l'attivazione dell'immagine da utilizzare nel container che viene effettuata tramite i seguenti comandi:
@@ -360,6 +368,7 @@ Tale scelta non è stata comunque adottata per il semplice motivo che, in questo
 Nota: per un eventuale utilizzo di wireshark, vedere la apposita sezione presente in coda al testo.
 
 **OpenVSwitch**
+
 Lo switch è molto semplice grazie all'utilizzao di OpenVSwitch: come si può osservare nel file `switch.sh`, in cui sono eseguiti i seguenti comandi:
     
     apt-get update
@@ -387,6 +396,7 @@ Lo switch è molto semplice grazie all'utilizzao di OpenVSwitch: come si può os
 esso, dopo aver installato openvswitch, collega semplicemente le porte di rete ad esso connesse tramite un bridge. E' interessante osservare come le reti Hosts-A e Hosts-B siano state separate grazie all'utilizzo dei tag VLAN. Il collegamento da router-1 a switch è effettuato tramite un'unica porta (trunk-port) e la differenziazione del traffico delle due sottoreti durante l'instradamento avviene grazie all'utilizzo di due interfacce di rete che fanno utilizzo di diversi ID tag delle VLAN.
 
 **Indirizzamento**
+
 Nella seguente tabella sono riportati alcuni dati sugli indirizzi utilizzati nelle sottoreti.
 | Subnetwork | Network     | Netmask         | Broadcast    | HostMin     | HostMax      | #Hosts |
 | ---------- | ----------- | --------------- | ------------ | ----------- | ------------ | ------ |
@@ -396,6 +406,7 @@ Nella seguente tabella sono riportati alcuni dati sugli indirizzi utilizzati nel
 | Routers    | 172.16.0.4  | 255.255.255.252 | 172.16.0.7   | 172.16.0.5  | 172.16.0.6   | 2      |
 
 **Note:**
+
 Il file `Vagrantfile` è stato modificato in modo molto ridotto: è stata solamente aggiunta memoria a Host-2-c in modo tale che potesse installare docker e sono stati cambiati i nomi dei file contenenti i comandi per la shell (files xxxxx.sh).
 I file `xxxxx.sh` contenenti i comandi per l'inizializzazione delle macchine virtuali sono ampiamente commentati: è possibile osservare all'interno di tali file la lista completa dei comandi utilizzati per impostare correttamente la nostra rete.
 
@@ -441,6 +452,7 @@ La corretta configurazione della rete è stata verificata tramite i seguenti com
     
     
 **Note su wireshark**
+
 In router-1, è possibile installare Wireshark per osservare il traffico che transita attraverso una specifica interfaccia.
 Per installarlo, è necessario, prima di fare `vagrant up`, modificare il `Vagrantfile`, andando ad inserire 512MB di memoria per router-1, e modificare il file `router-1.sh`, andando a scommentare le righe che consentono l'installazione di wireshark.
 In seguito ai precedenti passaggi, wireshark può essere utilizzato, nella sua versione tramite la CLI, lanciando il seguente comando:
